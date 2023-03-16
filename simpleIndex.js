@@ -11,7 +11,7 @@ function gRepositories(user) {
 }
 function gCommits(repos) {
   console.log("Repositories: ", repos);
-  getCommits(repos, displayCommits);
+  getCommits(repos[0], displayCommits);
 }
 function displayCommits(commits) {
   console.log("Commits: ", commits);

@@ -5,7 +5,7 @@ getUser(1, (user) => {
   //ex. 1: getRepositories assincrono:
   getRepositories(user.gitHubUsername, (repositories) => {
     console.log("repositories: ", repositories);
-    getCommits(repositories, (commits) => {
+    getCommits(repositories[0], (commits) => {
       console.log(commits);
     });
   });
