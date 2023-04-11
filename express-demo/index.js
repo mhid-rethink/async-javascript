@@ -1,85 +1,31 @@
-import Joi from "joi";
 import express, { response } from "express";
+import { logger } from "./middleware/logger.js";
+import helmet from "helmet";
+import morgan from "morgan";
+import config from "config";
+import courses from "./routes/courses.js";
+import home from "./routes/home.js";
 const app = express();
 
+app.set("view engine", "pug");
+app.set("views", "./views"); //param opicional e ./views é o default
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.use(helmet());
+app.use("/api/courses", courses);
+app.use("/", home);
 
-const courses = [
-  { id: 1, name: "curso1" },
-  { id: 2, name: "curso2" },
-  { id: 3, name: "curso3" },
-];
+//Configuration
+console.log(`Application name: ${config.get("name")}`);
+console.log(`Application mail: ${config.get("mail.host")}`);
+if (app.get("env") === "development") {
+  app.use(morgan("tiny"));
+  console.log("Morgan enabled...");
+}
 
-app.get("/", (req, res) => {
-  res.send("Hello World!!");
-});
+app.use(logger);
 
-app.get("/api/courses", (req, res) => {
-  res.send(courses);
-});
-
-app.get("/api/courses/:id", (req, res) => {
-  const course = courses.find((el) => el.id === parseInt(req.params.id));
-  if (!course) {
-    res.status(404).send("Course with given ID not found");
-  } else {
-    res.send(course);
-  }
-});
-
-// app.get("/api/posts/:year/:month", (req, res) => {
-//   res.send(req.query); //query é usado para ler parametros opcionais, que sao passados na url por ?
-//   // Ex.: http://localhost:3000/api/posts/2021/1?sortBy=name
-// });
-
-app.post("/api/courses", (req, res) => {
-  const { error } = validateCourse(req.body);
-  if (error) {
-    // 400 = Bad Request
-    return res.status(400).send(error.details[0].message);
-  }
-
-  const course = {
-    id: courses.length + 1,
-    name: req.body.name,
-  };
-  courses.push(course);
-  res.send(course);
-});
-
-app.put("/api/courses/:id", (req, res) => {
-  const course = courses.find((el) => el.id === parseInt(req.params.id));
-  if (!course) {
-    return res.status(404).send("Course with given ID not found");
-  }
-
-  const { error } = validateCourse(req.body);
-  if (error) {
-    // 400 = Bad Request
-    return res.status(400).send(error.details[0].message);
-  }
-
-  course.name = req.body.name;
-  res.send(course);
-});
-
-app.delete("/api/courses/:id", (req, res) => {
-  const course = courses.find((el) => el.id === parseInt(req.params.id));
-  if (!course) {
-    return res.status(404).send("Course with given ID not found");
-  }
-
-  const index = courses.indexOf(course);
-  courses.splice(index, 1);
-
-  res.send(course);
-});
-
-const validateCourse = (course) => {
-  const schema = {
-    name: Joi.string().min(3).required(),
-  };
-  return Joi.validate(course, schema);
-};
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Listening port ${port}...`));
